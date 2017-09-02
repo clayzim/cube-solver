@@ -10,3 +10,12 @@ type Sticker = (Face, Color)
 type Piece = [Sticker]
 
 type Cube = [Piece]
+
+hasColor :: Color -> Piece -> Bool
+hasColor thisColor piece = thisColor `elem` colors piece
+
+colors :: Piece -> [Color]
+colors piece = map color piece
+
+color :: Sticker -> Color
+color sticker = snd sticker
