@@ -28,3 +28,22 @@ faces piece = map face piece
 
 face :: Sticker -> Face
 face sticker = fst sticker
+
+isSolved :: Cube -> Bool
+isSolved cube = all inFinalPosition cube
+
+inFinalPosition :: Piece -> Bool
+inFinalPosition piece = all onCorrectFace piece
+
+onCorrectFace :: Sticker -> Bool
+onCorrectFace sticker = face sticker == appropriateFace sticker
+
+appropriateFace :: Sticker -> Face
+appropriateFace sticker
+    | thisColor == Red = Front
+    | thisColor == Green = Right
+    | thisColor == Orange = Back
+    | thisColor == Blue = Left
+    | thisColor == Yellow = Up
+    | thisColor == White = Down
+    where thisColor = color sticker
