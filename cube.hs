@@ -19,3 +19,12 @@ colors piece = map color piece
 
 color :: Sticker -> Color
 color sticker = snd sticker
+
+hasFace :: Face -> Piece -> Bool
+hasFace thisFace piece = thisFace `elem` faces piece
+
+faces :: Piece -> [Face]
+faces piece = map face piece
+
+face :: Sticker -> Face
+face sticker = fst sticker
