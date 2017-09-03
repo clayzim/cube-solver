@@ -67,6 +67,14 @@ rotateCube face cube = rotated ++ unchanged
                              rotated = map (rotatePieceByFace face) facePieces
                              unchanged = filter (`notElem` facePieces) cube
 
+rotateByFace :: Face -> (Piece -> Piece)
+rotateByFace Front = rotatePiece Z Clockwise
+rotateByFace Right = rotatePiece X Clockwise
+rotateByFace Back = rotatePiece Z Counterclockwise
+rotateByFace Left = rotatePiece X Counterclockwise
+rotateByFace Up = rotatePiece Y Clockwise
+rotateByFace Down = rotatePiece Y Counterclockwise
+
 --Potentially change order of axis & rotation arguments
 rotatePiece :: Axis -> Rotation -> (Piece -> Piece)
 rotatePiece axis rotation
