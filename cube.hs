@@ -89,13 +89,13 @@ rotatePiece face rotation = map (nextSticker sequence)
                          else reverse baseSequence
 
 clockwiseSequence :: Face -> [Face]
-clockwiseSequence face
-    | face == Front = zClockwise
-    | face == Right = xClockwise
-    | face == Back = reverse zClockwise
-    | face == Left = reverse xClockwise
-    | face == Up = yClockwise
-    | face == Down = reverse yClockwise
+clockwiseSequence face = case face of
+    Front -> zClockwise
+    Right -> xClockwise
+    Back -> reverse zClockwise
+    Left -> reverse xClockwise
+    Up -> yClockwise
+    Down -> reverse yClockwise
     where xClockwise = [Front,Up,Back,Down]
           yClockwise = [Front,Left,Back,Right]
           zClockwise = [Up,Right,Down,Left]
@@ -110,7 +110,22 @@ nextInCycle sequence currentValue
     where currentIndex = currentValue `elemIndex` sequence
           progression = cycle sequence
 
+{-
+valid cube constraints for verifying input:
+    8 pieces with each face
+    8 corners
+    12 edges
+    8 pieces with each color
+    no piece has same face multiple times
+    no piece has same color multiple times
+-}
 
+{-
+Folding pattern:
+                 Up
+Front Right Back Left
+                 Down
+-}
 
 
 
