@@ -5,7 +5,6 @@ import Data.Maybe
 data Face = Front | Right | Back | Left | Up | Down deriving (Ord, Eq, Enum, Show)
 data Color = Red | Green | Orange | Blue | Yellow | White deriving (Ord, Eq, Enum, Show)
 
-data Axis = X | Y | Z deriving (Ord, Eq, Enum, Show)
 data Rotation = Clockwise | Counterclockwise deriving (Ord, Eq, Enum, Show)
 
 type Sticker = (Face, Color)
@@ -22,6 +21,20 @@ isEdge piece = length piece == 2
 
 isCorner :: Piece -> Bool
 isCorner piece = length piece == 3
+
+--There's only ever gonna be one sticker with the same color. A piece can't have duplicate colors
+faceWithColor :: Color -> Piece -> Maybe Face
+faceWithColor thisColor piece 
+    | null stickersWithColor = Nothing
+    | otherwise = Just $ face $ head stickersWithColor
+    where stickersWithColor = filter (\sticker -> color sticker == thisColor) piece
+
+--Rather than Maybe's, I might want to just allow the crash when called with a nonexistent face
+colorOnFace :: Face -> Piece -> Maybe Color
+colorOnFace thisFace piece
+    | null stickersOnFace = Nothing
+    | otherwise = Just $ color $ head stickersOnFace
+    where stickersOnFace = filter (\sticker -> face sticker == thisFace) piece
 
 hasColor :: Color -> Piece -> Bool
 hasColor thisColor piece = thisColor `elem` colors piece
@@ -61,51 +74,43 @@ correctFace sticker
     | thisColor == White = Down
     where thisColor = color sticker
 
-rotateCube :: Face -> Cube -> Cube
-rotateCube face cube = rotated ++ unchanged
-                       where facePieces = filter (hasFace face) cube
-                             rotated = map (rotatePieceByFace face) facePieces
-                             unchanged = filter (`notElem` facePieces) cube
+--Only expose this rotate function to any users of this module
+rotate :: Face -> Rotation -> Cube -> Cube
+rotate thisFace rotation cube = rotated ++ unchanged
+    where facePieces = filter (hasFace thisFace) cube
+          unchanged = filter (`notElem` facePieces) cube
+          rotated = map (rotatePiece thisFace rotation) facePieces
 
-rotateByFace :: Face -> (Piece -> Piece)
-rotateByFace Front = rotatePiece Z Clockwise
-rotateByFace Right = rotatePiece X Clockwise
-rotateByFace Back = rotatePiece Z Counterclockwise
-rotateByFace Left = rotatePiece X Counterclockwise
-rotateByFace Up = rotatePiece Y Clockwise
-rotateByFace Down = rotatePiece Y Counterclockwise
+rotatePiece :: Face -> Rotation -> (Piece -> Piece)
+rotatePiece face rotation = map (nextSticker sequence)
+    where baseSequence = clockwiseSequence face
+          sequence = if (rotation == Clockwise)
+                         then baseSequence
+                         else reverse baseSequence
 
---Potentially change order of axis & rotation arguments
-rotatePiece :: Axis -> Rotation -> (Piece -> Piece)
-rotatePiece axis rotation
-    | rotation == Clockwise = map (nextSticker sequence)
-    | otherwise = map (nextSticker $ reverse sequence)
-    where sequence = case axis of
-                        X -> [Front, Up, Back, Down]
-                        Y -> [Front, Left, Back, Right]
-                        Z -> [Up, Right, Down, Left]
-
---Face names don't correspond to expected behavior when called outside of rotateCube.
---The rotation has more to do with axis and clockwise-ness than face.
-rotatePieceByFace :: Face -> (Piece -> Piece)
-rotatePieceByFace face
-    | face == Front = map (nextSticker zClockwise)
-    | face == Right = map (nextSticker xClockwise)
-    | face == Back = map (nextSticker $ reverse zClockwise)
-    | face == Left = map (nextSticker $ reverse xClockwise)
-    | face == Up = map (nextSticker yClockwise)
-    | face == Down = map (nextSticker $ reverse yClockwise)
-    where xClockwise = [Front, Up, Back, Down]
-          yClockwise = [Front, Left, Back, Right]
-          zClockwise = [Up, Right, Down, Left]
+clockwiseSequence :: Face -> [Face]
+clockwiseSequence face
+    | face == Front = zClockwise
+    | face == Right = xClockwise
+    | face == Back = reverse zClockwise
+    | face == Left = reverse xClockwise
+    | face == Up = yClockwise
+    | face == Down = reverse yClockwise
+    where xClockwise = [Front,Up,Back,Down]
+          yClockwise = [Front,Left,Back,Right]
+          zClockwise = [Up,Right,Down,Left]
 
 nextSticker :: [Face] -> Sticker -> Sticker
 nextSticker sequence (face, color) = (nextInCycle sequence face, color)
 
---There may well be a cleaner/more concise way to write this
 nextInCycle :: (Eq a) => [a] -> a -> a
 nextInCycle sequence currentValue
-    | isJust currentIndex = thisCycle !! (fromJust currentIndex + 1)
+    | isJust currentIndex = progression !! (fromJust currentIndex + 1)
     | otherwise = currentValue
-    where currentIndex = elemIndex currentValue sequence
-          thisCycle = cycle sequence
+    where currentIndex = currentValue `elemIndex` sequence
+          progression = cycle sequence
+
+
+
+
+
